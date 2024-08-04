@@ -40,7 +40,7 @@ struct CurrentWeatherView: View {
                 .foregroundColor(.white)
                 .padding(.bottom)
             
-            Image(systemName: currentWeather.icon)
+            Image(systemName: "sun.max.fill") 
                 .resizable()
                 .frame(width: 100, height: 100)
                 .foregroundColor(.white)
@@ -73,10 +73,10 @@ struct WeeklyWeatherView: View {
                     
                     Spacer()
                     
-                    Text("\(Int(dayWeather.temp.day))°C")
+                    Text("\(Int(dayWeather.temp))°C")
                         .foregroundColor(.white)
                     
-                    Image(systemName: dayWeather.weather.first?.icon ?? "")
+                    Image(systemName: "sun.max.fill") // Use a default icon for now
                         .foregroundColor(.white)
                 }
                 .padding(.vertical, 5)

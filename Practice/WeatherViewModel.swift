@@ -10,50 +10,21 @@ class WeatherViewModel: ObservableObject {
     func fetchWeather() {
         cancellable = weatherService.fetchWeather()
             .sink(receiveCompletion: { _ in }, receiveValue: { response in
-                self.currentWeather = CurrentWeather(response: response.current)
-                self.weeklyWeather = response.daily.map { DailyWeather(response: $0) }
+                if let first = response.list.first {
+                    self.currentWeather = CurrentWeather(response: first)
+                }
+                
+                let groupedByDay = Dictionary(grouping: response.list) { (forecast) -> String in
+                    let date = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
+                    return DateFormatter.localizedString(from: date, dateStyle: .full, timeStyle: .none)
+                }
+                
+                self.weeklyWeather = groupedByDay.compactMap { (key, value) -> DailyWeather? in
+                    guard let firstForecast = value.first else { return nil }
+                    let avgTemp = value.map { $0.main.temp }.reduce(0, +) / Double(value.count)
+                    return DailyWeather(day: key, temp: avgTemp, weather: firstForecast.weather)
+                }
+                .sorted { $0.day < $1.day }
             })
-    }
-}
-
-struct CurrentWeather {
-    let date: String
-    let temperature: Double
-    let description: String
-    let icon: String
-
-    init(date: String, temperature: Double, description: String, icon: String) {
-        self.date = date
-        self.temperature = temperature
-        self.description = description
-        self.icon = icon
-    }
-
-    init(response: CurrentWeatherResponse) {
-        self.date = DateFormatter.localizedString(from: Date(timeIntervalSince1970: TimeInterval(response.dt)), dateStyle: .full, timeStyle: .none)
-        self.temperature = response.temp
-        self.description = response.weather.first?.description ?? ""
-        self.icon = response.weather.first?.icon ?? ""
-    }
-
-    static let empty = CurrentWeather(date: "", temperature: 0, description: "", icon: "")
-}
-
-struct DailyWeather: Identifiable {
-    let id = UUID()
-    let day: String
-    let temp: Temperature
-    let weather: [Weather]
-
-    init(day: String, temp: Temperature, weather: [Weather]) {
-        self.day = day
-        self.temp = temp
-        self.weather = weather
-    }
-
-    init(response: DailyWeatherResponse) {
-        self.day = DateFormatter.localizedString(from: Date(timeIntervalSince1970: TimeInterval(response.dt)), dateStyle: .full, timeStyle: .none)
-        self.temp = response.temp
-        self.weather = response.weather
     }
 }
