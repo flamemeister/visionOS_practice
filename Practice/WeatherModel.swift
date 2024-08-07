@@ -1,56 +1,72 @@
-import Foundation
-
-struct WeatherResponse: Codable {
-    let list: [Forecast]
+struct Weather: Codable {
+    let cod: String
+    let message, cnt: Int
+    let list: [WeatherList]
+    let city: City
 }
 
-struct Forecast: Codable {
+struct City: Codable {
+    let id: Int
+    let name: String
+    let coord: Coord
+    let country: String
+    let population, timezone, sunrise, sunset: Int
+}
+
+struct Coord: Codable {
+    let lat, lon: Double
+}
+
+struct WeatherList: Codable {
     let dt: Int
     let main: Main
-    let weather: [Weather]
+    let weather: [WeatherElement]
+    let clouds: Clouds
+    let wind: Wind
+    let visibility: Int
+    let pop: Double
+    let sys: Sys
+    let dtTxt: String
+
+    enum CodingKeys: String, CodingKey {
+        case dt, main, weather, clouds, wind, visibility, pop, sys
+        case dtTxt = "dt_txt"
+    }
+}
+
+struct Clouds: Codable {
+    let all: Int
 }
 
 struct Main: Codable {
-    let temp: Double
+    let temp, feelsLike, tempMin, tempMax: Double
+    let pressure, seaLevel, grndLevel, humidity: Int
+    let tempKf: Double
+
+    enum CodingKeys: String, CodingKey {
+        case temp
+        case feelsLike = "feels_like"
+        case tempMin = "temp_min"
+        case tempMax = "temp_max"
+        case pressure
+        case seaLevel = "sea_level"
+        case grndLevel = "grnd_level"
+        case humidity
+        case tempKf = "temp_kf"
+    }
 }
 
-struct Weather: Codable {
-    let description: String
-    let icon: String
+struct Sys: Codable {
+    let pod: String
 }
 
-struct CurrentWeather {
-    let date: String
-    let temperature: Double
-    let description: String
-    let icon: String
-
-    init(date: String, temperature: Double, description: String, icon: String) {
-        self.date = date
-        self.temperature = temperature
-        self.description = description
-        self.icon = icon
-    }
-
-    init(response: Forecast) {
-        self.date = DateFormatter.localizedString(from: Date(timeIntervalSince1970: TimeInterval(response.dt)), dateStyle: .full, timeStyle: .none)
-        self.temperature = response.main.temp
-        self.description = response.weather.first?.description ?? ""
-        self.icon = response.weather.first?.icon ?? ""
-    }
-
-    static let empty = CurrentWeather(date: "", temperature: 0, description: "", icon: "")
+struct WeatherElement: Codable {
+    let id: Int
+    let main, description, icon: String
 }
 
-struct DailyWeather: Identifiable {
-    let id = UUID()
-    let day: String
-    let temp: Double
-    let weather: [Weather]
-
-    init(day: String, temp: Double, weather: [Weather]) {
-        self.day = day
-        self.temp = temp
-        self.weather = weather
-    }
+struct Wind: Codable {
+    let speed: Double
+    let deg: Int
+    let gust: Double
 }
